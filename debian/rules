@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=orcid
+
+# main packaging script based on dh7 syntax
+%:
+	dh $@ --with python2,python3 --buildsystem=pybuild
+
+# no testing ...
+override_dh_auto_test:

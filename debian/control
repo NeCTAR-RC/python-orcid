@@ -1,0 +1,49 @@
+Source: orcid
+Section: net
+Priority: optional
+Maintainer: Mateusz Susik <mateuszsusik@gmail.com>
+Build-Depends:
+ debhelper (>= 10),
+ dh-python,
+ po-debconf,
+ python3-all,
+ python3-pip,
+ python3-setuptools,
+ python-all,
+ python-pip,
+ python-setuptools,
+Build-Depends-Indep:
+ python-html5lib,
+ python-bs4,
+ python-requests,
+ python-simplejson,
+ python-lxml,
+ python-pytest,
+ python-coverage,
+ python-httpretty,
+ python3-html5lib,
+ python3-bs4,
+ python3-requests,
+ python3-simplejson,
+ python3-lxml,
+ python3-pytest,
+ python3-coverage,
+ python3-httpretty,
+Standards-Version: 4.1.3
+Homepage: https://github.com/NeCTAR-RC/python-orcid
+
+Package: python-orcid
+Section: python
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python:Depends},
+Description: Orcid python library
+
+Package: python3-orcid
+Section: python
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Description: Orcid python library
