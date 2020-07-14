@@ -37,7 +37,7 @@ class PublicAPI(object):
     TYPES_WITH_MULTIPLE_PUTCODES = set(['works'])
 
     def __init__(self, institution_key, institution_secret, sandbox=False,
-                 timeout=None, do_store_raw_response=False):
+                 timeout=None, proxies=None, do_store_raw_response=False):
         """Initialize public API.
 
         Parameters
@@ -54,10 +54,16 @@ class PublicAPI(object):
             `requests documentation
             <http://docs.python-requests.org/en/master/user/advanced/#timeouts>`_
             for more information.
+        :param proxies: dictionary
+            Maps service URL's protocol to the URL of a proxy.  None means no
+            proxies used.  See `requests documentation
+            <https://requests.readthedocs.io/en/master/user/advanced/#proxies>`_
         """
+
         self._key = institution_key
         self._secret = institution_secret
         self._timeout = timeout
+        self._proxies = proxies
         self.raw_response = None
         self.do_store_raw_response = do_store_raw_response
         if sandbox:
@@ -231,7 +237,7 @@ class PublicAPI(object):
         headers = {'Accept': 'application/json'}
 
         response = requests.post(url, data=payload, headers=headers,
-                                 timeout=self._timeout)
+                                 timeout=self._timeout, proxies=self._proxies)
         response.raise_for_status()
         if self.do_store_raw_response:
             self.raw_response = response
@@ -292,7 +298,7 @@ class PublicAPI(object):
         }
         response = requests.post(self._token_url, data=token_dict,
                                  headers={'Accept': 'application/json'},
-                                 timeout=self._timeout)
+                                 timeout=self._timeout, proxies=self._proxies)
         response.raise_for_status()
         if self.do_store_raw_response:
             self.raw_response = response
@@ -330,7 +336,7 @@ class PublicAPI(object):
 
         session = requests.session()
         session.get('https://' + self._host + '/signout',
-                    timeout=self._timeout)
+                    timeout=self._timeout, proxies=self._proxies)
         params = {
             'client_id': self._key,
             'response_type': 'code',
@@ -341,12 +347,13 @@ class PublicAPI(object):
         response = session.get(self._login_or_register_endpoint,
                                params=params,
                                headers={'Host': self._host},
-                               timeout=self._timeout)
+                               timeout=self._timeout, proxies=self._proxies)
 
         response.raise_for_status()
 
         soup = BeautifulSoup(response.content, 'html5lib')
         csrf = soup.find(attrs={'name': '_csrf'}).attrs['content']
+
         headers = {
             'Host': self._host,
             'Origin': 'https://' + self._host,
@@ -367,6 +374,7 @@ class PublicAPI(object):
             data=json.dumps(data),
             headers=headers
         )
+
         response.raise_for_status()
 
         uri = json.loads(response.text)['redirectUrl']
@@ -408,7 +416,7 @@ class PublicAPI(object):
         headers = {'Accept': accept_type,
                    'Authorization': 'Bearer %s' % access_token}
         return requests.get(request_url, headers=headers,
-                            timeout=self._timeout)
+                            timeout=self._timeout, proxies=self._proxies)
 
     def _search(self, query, method, start, rows, headers,
                 endpoint):
@@ -420,7 +428,7 @@ class PublicAPI(object):
             url += "&rows=%s" % rows
 
         response = requests.get(url, headers=headers,
-                                timeout=self._timeout)
+                                timeout=self._timeout, proxies=self._proxies)
         response.raise_for_status()
         if self.do_store_raw_response:
             self.raw_response = response
@@ -439,7 +447,7 @@ class MemberAPI(PublicAPI):
     """Member API."""
 
     def __init__(self, institution_key, institution_secret, sandbox=False,
-                 timeout=None, do_store_raw_response=False):
+                 timeout=None, proxies=None, do_store_raw_response=False):
         """Initialize member API.
 
         Parameters
@@ -456,9 +464,13 @@ class MemberAPI(PublicAPI):
             `requests documentation
             <http://docs.python-requests.org/en/master/user/advanced/#timeouts>`_
             for more information.
-        """
+        :param proxies: dictionary
+            Maps service URL's protocol to the URL of a proxy.  None means no
+            proxies used.  See `requests documentation
+            <https://requests.readthedocs.io/en/master/user/advanced/#proxies>`_        """
         super(MemberAPI, self).__init__(institution_key,
-                                        institution_secret, sandbox, timeout)
+                                        institution_secret, sandbox,
+                                        timeout, proxies)
         self.raw_response = None
         self.do_store_raw_response = do_store_raw_response
         if sandbox:
@@ -709,7 +721,7 @@ class MemberAPI(PublicAPI):
         headers = {'Accept': accept_type,
                    'Authorization': 'Bearer %s' % access_token}
         return requests.get(request_url, headers=headers,
-                            timeout=self._timeout)
+                            timeout=self._timeout, proxies=self._proxies)
 
     def _update_activities(self, orcid_id, token, method, request_type,
                            data=None, put_code=None,
@@ -728,10 +740,12 @@ class MemberAPI(PublicAPI):
                    'Authorization': 'Bearer ' + token}
 
         if method == requests.delete:
-            response = method(url, headers=headers, timeout=self._timeout)
+            response = method(url, headers=headers,
+                              timeout=self._timeout, proxies=self._proxies)
         else:
             xml = self._serialize_by_content_type(data, content_type)
-            response = method(url, xml, headers=headers, timeout=self._timeout)
+            response = method(url, xml, headers=headers,
+                              timeout=self._timeout, proxies=self._proxies)
 
         response.raise_for_status()
         if self.do_store_raw_response:
